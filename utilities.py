@@ -24,3 +24,13 @@ def dbconn():
         raise ConnectionError ("Could not establish a connection to the database")
     return (conn, cursor)
 
+
+def login(userId):
+    loginToken = uuid4().hex
+    (conn, cursor) = dbconn()
+    cursor.execute('INSERT INTO user_session (login_token, user_id) VALUES (?, ?)', [loginToken, userId])
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return loginToken
+
