@@ -1,3 +1,4 @@
+from werkzeug.datastructures import Headers
 from app import app
 from flask import request, Response
 import json
@@ -12,8 +13,14 @@ def credcheck():
     try:
         conn = None
         cursor = None
-        (conn, cursor) = dbconn()
+        (conn, cursor) = dbconn() 
+        if request.method == 'OPTIONS':
+            return Headers[
+                'Access-Control-Allow-Origin' : 'no-cors',
+                'Access-Control-Allow-Methods' : 'POST', 'DELETE'
+            ]
         if request.method == 'POST':
+
             email = request.json.get('email')
             pwrd = request.json.get('password')
             cursor.execute('SELECT * from user WHERE email =? AND password = ?', [email, pwrd])
