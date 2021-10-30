@@ -1,10 +1,11 @@
-from werkzeug.datastructures import Headers
 from app import app
 from flask import request, Response
 import json
 import mariadb
 from uuid import uuid4
-from utilities import dbconn, login
+from utilities import dbconn
+import bcrypt
+
 
 
 
@@ -14,39 +15,40 @@ def credcheck():
         conn = None
         cursor = None
         (conn, cursor) = dbconn() 
-        if request.method == 'OPTIONS':
-            return Headers[
-                'Access-Control-Allow-Origin' : 'no-cors',
-                'Access-Control-Allow-Methods' : 'POST', 'DELETE'
-            ]
         if request.method == 'POST':
-
             email = request.json.get('email')
-            pwrd = request.json.get('password')
-            cursor.execute('SELECT * from user WHERE email =? AND password = ?', [email, pwrd])
-            result = cursor.fetchall()
-            if (cursor.rowcount == 1):
-                if pwrd == result[0][2]:
-                    userId = result[0][0]
-                    loginToken = login(userId)
+            # pwrd = request.json.get('password')
+            # salt = bcrypt.gensalt()
+            # hashed = bcrypt.hashpw(pwrd.encode(), salt)
+            # print(hashed)
+            while True:
+                pw_in = request.json.get('password')
+                cursor.execute ('SELECT password, id from user WHERE email = ?', [email,])
+                result = cursor.fetchone()
+                if result == None:
+                    return Response("That user does not exist",
+                                    mimetype='text/plain',
+                                    status=403)
+                pw_db = result[0] 
+                user_id = result[1]
+                
+                if (bcrypt.checkpw(pw_in.encode(), pw_db.encode())): 
+                    print("match")
+                    loginToken = newToken(user_id)
                     loginDict = {
-                        "userId" : userId,
+                        "userId" : user_id,
                         "loginToken" : loginToken
-                    }
-                    conn.commit()
+                        }
                     cursor.close()
                     conn.close()
                     return Response(json.dumps(loginDict),
-                                mimetype='application/json',
-                                status=200)
+                                    mimetype='application/json',
+                                    status=200)
                 else: 
                     return Response("Your email and password do not match",
-                                mimetype='text/plain',
-                                status=401)
-            else:
-                return Response("Something went wrong",
-                                mimetype='text/plain',
-                                status=401)
+                                        mimetype='text/plain',
+                                        status=403)
+
         elif request.method == 'DELETE':
             token = request.json.get('loginToken')
             cursor.execute('SELECT * from user_session WHERE login_token = ?', [token,])
@@ -87,3 +89,12 @@ def credcheck():
     #         cursor.close()
     #     if (conn != None):
     #         conn.close()
+    
+def newToken(userId):
+    loginToken = uuid4().hex
+    (conn, cursor) = dbconn()
+    cursor.execute('INSERT INTO user_session (login_token, user_id) VALUES (?, ?)', [loginToken, userId])
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return loginToken
