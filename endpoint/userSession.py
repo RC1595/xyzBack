@@ -17,10 +17,6 @@ def credcheck():
         (conn, cursor) = dbconn() 
         if request.method == 'POST':
             email = request.json.get('email')
-            # pwrd = request.json.get('password')
-            # salt = bcrypt.gensalt()
-            # hashed = bcrypt.hashpw(pwrd.encode(), salt)
-            # print(hashed)
             while True:
                 pw_in = request.json.get('password')
                 cursor.execute ('SELECT password, id from user WHERE email = ?', [email,])
@@ -50,7 +46,7 @@ def credcheck():
                                         status=403)
 
         elif request.method == 'DELETE':
-            token = request.json.get('loginToken')
+            token = request.json.get('token')
             cursor.execute('SELECT * from user_session WHERE login_token = ?', [token,])
             result = cursor.fetchall()
             if (cursor.rowcount == 1):
