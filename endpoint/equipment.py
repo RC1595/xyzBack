@@ -95,9 +95,23 @@ def equipment():
         result = cursor.fetchone()
         if result[1] == ('admin'):
             sn = request.json.get('sn')
-            cursor.execute('SELECT * from equipment WHERE serial_number = ?'[sn,])
+            cursor.execute('SELECT * from equipment WHERE serial_number = ?', [sn,])
             result = cursor.fetchall()
-            
-            pass
+            if cursor.rowcount == 1:
+                cursor.execute('DELETE FROM equipment WHERE serial_number = ?', [sn,])
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return Response(json.dumps("Delete successful"),
+                                mimetype='application/json',
+                                status=200)
+            else:
+                return Response(json.dumps("Request cannot be completed"),
+                                mimetype='application/json',
+                                status=403)
+        else:
+            return Response(json.dumps("Authorization denied"),
+                            mimetype='application/json',
+                            status=403)
             
             
