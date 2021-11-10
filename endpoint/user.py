@@ -21,7 +21,7 @@ def user():
         print(result)
         
         if result[1] == 'admin':
-            cursor.execute('SELECT email, role, company_id, created_at, first_name, last_name FROM user')
+            cursor.execute('SELECT email, role, created_at, first_name, last_name, company_name FROM user INNER JOIN company on user.company_id = company.id')
             result = cursor.fetchall()
             userArray = []
             for user in result:
@@ -30,17 +30,14 @@ def user():
                     'last_name' : user[5],
                     'email' : user[0],
                     'role' : user[1],
-                    'company_id' : user[2],
+                    'company_name' : user[2],
                     'created_at' : user[3]    
                 }
                 userArray.append(userDict)
-            return Response(json.dumps(userArray, default=str),
+            return Response(json.dumps(userDict, default=str),
                             mimetype='application/json',
                             status=200)
             
-        
-
-
         else:
             return Response(json.dumps("error", default=str),
                         mimetype='application/json',
@@ -49,22 +46,25 @@ def user():
     elif request.method == 'POST':
         cursor.execute('SELECT role FROM user INNER JOIN user_session ON user.id = user_session.user_id')
         result = cursor.fetchall()
-        if result[0] == [('admin',)]:
-            newUser = request.json.get('first_name')
+        if result[0] == ('admin',):
+            companyName = request.json.get('companyName')
+            cursor.execute('SELECT id FROM company WHERE company_name = ?',[companyName,])
+            companyMatch = cursor.fetchone()
+            company = companyMatch[0]
             pwrd = request.json.get('password')
             salt = bcrypt.gensalt()
             hashed = bcrypt.hashpw(pwrd.encode(), salt)
-            cursor.execute("INSERT INTO user (email, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?)",
+            cursor.execute("INSERT INTO user (email, password, role, first_name, last_name, company_id) VALUES (?, ?, ?, ?, ?, ?)",
                             [request.json.get('email'),
                             hashed,
                             request.json.get('role'),
                             request.json.get('fName'),
                             request.json.get('lName'),
-])
+                            company])
             conn.commit()
             cursor.close()
             conn.close()
-            return Response(json.dumps(newUser))
+            return Response(status=201)
         else:
             return Response("You are not authorized to complete this action",
                             mimetype='text/plain',

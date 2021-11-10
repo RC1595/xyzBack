@@ -80,11 +80,11 @@ def credcheck():
         return Response ("Harmful query detected",
                         mimetype= 'text/plain',
                         status= 403)
-    # finally:
-    #     if (cursor != None):
-    #         cursor.close()
-    #     if (conn != None):
-    #         conn.close()
+    finally:
+        if (cursor != None):
+            cursor.close()
+        if (conn != None):
+            conn.close()
     
 def newToken(userId):
     loginToken = uuid4().hex

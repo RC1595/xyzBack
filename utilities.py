@@ -1,6 +1,8 @@
 import mariadb
 import dbcreds
-from uuid import uuid4
+
+conn = None
+cursor = None
 
 def dbconn():
     conn = None
@@ -23,7 +25,3 @@ def dbconn():
         print("connection closed")
         raise ConnectionError ("Could not establish a connection to the database")
     return (conn, cursor)
-
-
-
-
