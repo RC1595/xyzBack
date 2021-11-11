@@ -2,6 +2,7 @@ from app import app
 from utilities import dbconn
 from flask import request, Response
 import json
+import mariadb
 
 
 
@@ -14,22 +15,59 @@ def rentals():
     
     if request.method == 'GET':
         params = request.args
-        cursor.execute('SELECT rentals.serial_number, date_out, date_in, company_name, phone, first_name, last_name, email FROM rentals INNER JOIN equipment ON rentals.serial_number = equipment.serial_number INNER JOIN company ON rentals.company_id = company.id INNER JOIN user ON rentals.user_id = user.id')
-        result = cursor.fetchall()
-        rentalArray = []
-        for rental in result:
-            rentalDict ={
-                'serial_number' : rental[0],
-                'date_out' : rental[1],
-                'date_in' : rental[2],
-                'company_name' : rental[3],
-                'phone' : rental[4],
-                'first_name' : rental[5],
-                'last_name' : rental[6],
-                'email' : rental[7]
-            }
-            rentalArray.append(rentalDict)
-        return Response(json.dumps(rentalArray, default=str))
+        cursor.execute('SELECT user_id, role FROM user_session INNER JOIN user ON user_session.user_id = user.id WHERE login_token = ?', [token,])
+        result = cursor.fetchone()
+        if result[1] == ('admin'):
+            try:
+                cursor.execute('SELECT rentals.serial_number, date_out, date_in, company_name, phone, first_name, last_name, email FROM rentals INNER JOIN equipment ON rentals.serial_number = equipment.serial_number INNER JOIN company ON rentals.company_id = company.id INNER JOIN user ON rentals.user_id = user.id')
+                result = cursor.fetchall()
+                rentalArray = []
+                for rental in result:
+                    rentalDict ={
+                        'serial_number' : rental[0],
+                        'date_out' : rental[1],
+                        'date_in' : rental[2],
+                        'company_name' : rental[3],
+                        'phone' : rental[4],
+                        'first_name' : rental[5],
+                        'last_name' : rental[6],
+                        'email' : rental[7]
+                    }
+                    rentalArray.append(rentalDict)
+                return Response(json.dumps(rentalArray, default=str),
+                                mimetype= 'application/json',
+                                status= 200)
+            except ConnectionError:
+                return Response ("There was a problem connecting to the database",
+                                mimetype= 'text/plain',
+                                status= 400)
+            except mariadb.DataError:
+                return Response ("There was a problem processing your request",
+                                mimetype= 'text/plain',
+                                status= 400)
+            except mariadb.OperationalError:
+                return Response ("Operational error on connection",
+                                mimetype='text/plain',
+                                status= 400)
+            except mariadb.ProgrammingError:
+                return Response ("Bad query",
+                                mimetype='text/plain',
+                                status= 400)
+            except mariadb.IntegrityError:
+                return Response ("Harmful query detected",
+                                mimetype= 'text/plain',
+                                status= 403)
+            finally:
+                if (cursor != None):
+                    cursor.close()
+                if (conn != None):
+                    conn.close()
+                
+        else:
+            return Response(json.dumps("error processing your request"),
+                            mimetype='application/json',
+                            status= 400)
+        
     
     elif request.method == 'POST':
         sn = request.json.get('sn')
@@ -51,10 +89,35 @@ def rentals():
                     conn.close()
                 
                     return Response(status=201)
-                except Exception as e:
-                    print(e)
+                except ConnectionError:
+                    return Response ("There was a problem connecting to the database",
+                                    mimetype= 'text/plain',
+                                    status= 400)
+                except mariadb.DataError:
+                    return Response ("There was a problem processing your request",
+                                    mimetype= 'text/plain',
+                                    status= 400)
+                except mariadb.OperationalError:
+                    return Response ("Operational error on connection",
+                                    mimetype='text/plain',
+                                    status= 400)
+                except mariadb.ProgrammingError:
+                    return Response ("Bad query",
+                                    mimetype='text/plain',
+                                    status= 400)
+                except mariadb.IntegrityError:
+                    return Response ("Harmful query detected",
+                                    mimetype= 'text/plain',
+                                    status= 403)
+                finally:
+                    if (cursor != None):
+                        cursor.close()
+                    if (conn != None):
+                        conn.close()
             else:
                 return Response(status=401)
+        else: 
+            return Response(status=400)
         
     elif request.method == 'PATCH':
         cursor.execute('SELECT user_id, role FROM user_session INNER JOIN user ON user_session.user_id = user.id WHERE login_token = ?', [token,])
@@ -73,7 +136,30 @@ def rentals():
                     pass
                 return Response(status=200)
 
-            except Exception as e:
-                print(e)
+            except ConnectionError:
+                return Response ("There was a problem connecting to the database",
+                                mimetype= 'text/plain',
+                                status= 400)
+            except mariadb.DataError:
+                return Response ("There was a problem processing your request",
+                                mimetype= 'text/plain',
+                                status= 400)
+            except mariadb.OperationalError:
+                return Response ("Operational error on connection",
+                                mimetype='text/plain',
+                                status= 400)
+            except mariadb.ProgrammingError:
+                return Response ("Bad query",
+                                mimetype='text/plain',
+                                status= 400)
+            except mariadb.IntegrityError:
+                return Response ("Harmful query detected",
+                                mimetype= 'text/plain',
+                                status= 403)
+            finally:
+                if (cursor != None):
+                    cursor.close()
+                if (conn != None):
+                    conn.close()
         else:
             return Response(status=401)
