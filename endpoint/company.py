@@ -24,7 +24,7 @@ def company():
                 companyArray = []
                 for company in result:
                     companyDict = {
-                        'company_name' : company[0],
+                        'companyName' : company[0],
                         'phone' : company[1],
                         'address' : company[2],
                         'city' : company[3],
@@ -76,17 +76,16 @@ def company():
             result = cursor.fetchall()
             if result[0] == ('admin',):
                 cursor.execute('INSERT INTO company (company_name, phone, address, city, region, country, zip_postal, date_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                                [request.json.get('company_name'),
-                                request.json.get('phone'),
+                                [request.json.get('company'),
+                                request.json.get('phoneNumber'),
                                 request.json.get('address'),
                                 request.json.get('city'),
                                 request.json.get('region'),
                                 request.json.get('country'),
-                                request.json.get('zip_postal'),
-                                request.json.get('date_active')])
+                                request.json.get('zip'),
+                                request.json.get('activeDate')])
                 conn.commit()
-                cursor.close()
-                conn.close()
+
                 return Response(status=201)
             else:
                 return Response("You are not authorized to complete this action",
@@ -168,8 +167,7 @@ def company():
                     }
                     updated.append(companyUpdate)
                 conn.commit()
-                cursor.close()
-                conn.close()
+
                 return Response(json.dumps(updated, default=str),
                                 mimetype='application/json',
                                 status=200)
@@ -215,8 +213,7 @@ def company():
                 if cursor.rowcount == 1:
                     cursor.execute('DELETE FROM company WHERE company.id = ?', [companyId,])
                     conn.commit()
-                    cursor.close()
-                    conn.close()
+
                     return Response(json.dumps("Delete successful"),
                                     mimetype='application/json',
                                     status=200)

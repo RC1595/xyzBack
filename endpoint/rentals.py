@@ -24,13 +24,13 @@ def rentals():
                 rentalArray = []
                 for rental in result:
                     rentalDict ={
-                        'serial_number' : rental[0],
-                        'date_out' : rental[1],
-                        'date_in' : rental[2],
-                        'company_name' : rental[3],
+                        'sn' : rental[0],
+                        'dateOut' : rental[1],
+                        'dateIn' : rental[2],
+                        'companyName' : rental[3],
                         'phone' : rental[4],
-                        'first_name' : rental[5],
-                        'last_name' : rental[6],
+                        'fName' : rental[5],
+                        'lName' : rental[6],
                         'email' : rental[7]
                     }
                     rentalArray.append(rentalDict)
@@ -79,16 +79,13 @@ def rentals():
             if cursor.rowcount == 1:
                 try:
                     cursor.execute('UPDATE equipment SET in_stock = ? WHERE serial_number = ?', [1, sn,])
-                    cursor.execute('INSERT INTO rentals (serial_number, company_id, user_id, date_in) VALUES (?, ?, ?, ?)', [
+                    cursor.execute('INSERT INTO rentals (serial_number, company_id, user_id) VALUES (?, ?, ?)', [
                         sn, 
                         request.json.get('company'),
-                        request.json.get('userId'),
-                        request.json.get('dateIn')])
+                        request.json.get('userId'),])
                     conn.commit()
-                    cursor.close()
-                    conn.close()
-                
                     return Response(status=201)
+                
                 except ConnectionError:
                     return Response ("There was a problem connecting to the database",
                                     mimetype= 'text/plain',
@@ -130,8 +127,6 @@ def rentals():
                     conn.commit()
                     cursor.execute('UPDATE equipment SET in_stock = ? WHERE serial_number = ?', [0, sn,])
                     conn.commit()
-                    cursor.close()
-                    conn.close()
                 else:
                     pass
                 return Response(status=200)

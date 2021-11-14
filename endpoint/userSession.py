@@ -35,8 +35,6 @@ def credcheck():
                             "userId" : user_id,
                             "loginToken" : loginToken
                             }
-                        cursor.close()
-                        conn.close()
                         return Response(json.dumps(loginDict),
                                         mimetype='application/json',
                                         status=200)
