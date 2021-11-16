@@ -22,12 +22,12 @@ def equipment():
                 equipArray = []
                 for equipment in equip:
                     equipDict = {
-                        'serial_number' : equipment[0],
+                        'sn' : equipment[0],
                         'product_description' : equipment[1],
                         'in_stock' : equipment[2]
                     }
                     equipArray.append(equipDict)
-                return Response(json.dumps(equipDict))
+                return Response(json.dumps(equipArray))
             else:
                 return Response(json.dumps("You are unauthorized to make that request"),
                                 mimetype='application/json',

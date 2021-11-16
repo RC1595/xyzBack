@@ -19,7 +19,7 @@ def company():
             result = cursor.fetchone()
             
             if result[1] == 'admin':
-                cursor.execute('SELECT company_name, phone, address, city, region, country, zip_postal, date_active FROM company')
+                cursor.execute('SELECT company_name, phone, address, city, region, country, zip_postal, date_active, id FROM company')
                 result = cursor.fetchall()
                 companyArray = []
                 for company in result:
@@ -31,10 +31,10 @@ def company():
                         'region' : company[4],
                         'country' : company[5],
                         'zip_postal' : company[6],
-                        'date_active' : company[7]
+                        'date_active' : company[7],
+                        'companyId' : company[8]
                     }
                     companyArray.append(companyDict)
-                    print(companyDict)
                 
                 return Response(json.dumps(companyArray, default=str),
                                 mimetype='application/json',

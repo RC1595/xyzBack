@@ -6,6 +6,7 @@ import mariadb
 import bcrypt
 
 
+
 @app.route("/api/user", methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def user():
     conn = None
@@ -14,23 +15,25 @@ def user():
 
     if request.method == 'GET':
         params = request.args
-        userId = params.get('userId')
+        # userId = params.get('userId')
         token = request.headers.get('token')
         try:
             cursor.execute('SELECT user_id, role FROM user_session INNER JOIN user ON user_session.user_id = user.id WHERE login_token = ?', [token,])
             result = cursor.fetchone()
             if result[1] == 'admin':
-                cursor.execute('SELECT email, role, created_at, first_name, last_name, company_name FROM user INNER JOIN company on user.company_id = company.id')
+                cursor.execute('SELECT email, role, created_at, first_name, last_name, user.id, company_name FROM user INNER JOIN company on user.company_id = company.id')
                 result = cursor.fetchall()
+                print(result)
                 userArray = []
                 for user in result:
                     userDict = {
-                        'first_name' : user[4],
-                        'last_name' : user[5],
+                        'fName' : user[3],
+                        'lName' : user[4],
                         'email' : user[0],
                         'role' : user[1],
-                        'company_name' : user[2],
-                        'created_at' : user[3]    
+                        'companyName' : user[6],
+                        'created' : user[2],
+                        'userId' : user[5]    
                     }
                     userArray.append(userDict)
                 return Response(json.dumps(userArray, default=str),

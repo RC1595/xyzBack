@@ -70,7 +70,7 @@ def rentals():
         
     
     elif request.method == 'POST':
-        sn = request.json.get('sn')
+        sn = request.json.get('selectedSn')
         cursor.execute('SELECT user_id, role FROM user_session INNER JOIN user ON user_session.user_id = user.id WHERE login_token = ?', [token,])
         result = cursor.fetchone()
         if result[1] == ('admin'):
@@ -81,8 +81,8 @@ def rentals():
                     cursor.execute('UPDATE equipment SET in_stock = ? WHERE serial_number = ?', [1, sn,])
                     cursor.execute('INSERT INTO rentals (serial_number, company_id, user_id) VALUES (?, ?, ?)', [
                         sn, 
-                        request.json.get('company'),
-                        request.json.get('userId'),])
+                        request.json.get('selectedCompany'),
+                        request.json.get('selectedUser'),])
                     conn.commit()
                     return Response(status=201)
                 
